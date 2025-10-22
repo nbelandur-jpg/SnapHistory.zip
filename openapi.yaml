@@ -1,44 +1,110 @@
-openapi: 3.0.2
+openapi: 3.1.0
 info:
   title: SnapHistory
   version: 1.0.0
   description: "Your Virtual Time-Guide — Every Picture Has a Soul. Created by Nuthan S Belandur."
 servers:
   - url: https://snaphistory-zip.onrender.com
+
+# Global auth requirement (health is opened explicitly below)
+security:
+  - ApiKeyAuth: []
+
 components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: x-api-key
+
+  schemas:
+    IdentifyRequest:
+      type: object
+      properties:
+        image_url:
+          type: string
+          description: Public URL to an image
+        target_language:
+          type: string
+          default: en
+          description: ISO language code for the summary
+      additionalProperties: false
+
+    IdentifyMultipart:
+      type: object
+      properties:
+        image_file:
+          type: string
+          format: binary
+          description: Image file upload
+        target_language:
+          type: string
+          default: en
+      additionalProperties: false
+
+    Coordinates:
+      type: object
+      properties:
+        lat: { type: number }
+        lon: { type: number }
+
+    PlaceInfo:
+      type: object
+      properties:
+        title: { type: string }
+        country: { type: string }
+        description: { type: string }
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        confidence: { type: number }
+        wiki_url: { type: string }
+        image_credit: { type: string }
+        year_built: { type: string }
+        architect: { type: string }
+        mood: { type: string }
+        echo_of_time: { type: string }
+        sources:
+          type: array
+          items: { type: string }
+
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+
 paths:
   /v1/identify:
     post:
       operationId: identifyPlace
       summary: Identify and summarize a place from a photo
       requestBody:
+        required: true
         content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                image_file:
-                  type: string
-                  format: binary
           application/json:
             schema:
-              type: object
-              properties:
-                image_url:
-                  type: string
+              $ref: '#/components/schemas/IdentifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IdentifyMultipart'
       responses:
-        "200":
-          description: OK
-      security:
-        - ApiKeyAuth: []
+        '200':
+          description: Place info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceInfo'
+      # uses global ApiKeyAuth
+
   /v1/health:
     get:
       operationId: healthCheck
+      security: []   # open endpoint
       responses:
-        "200":
-          description: OK
+        '200':
+          description: Service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
