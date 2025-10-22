@@ -1,0 +1,44 @@
+openapi: 3.0.2
+info:
+  title: SnapHistory
+  version: 1.0.0
+  description: "Your Virtual Time-Guide — Every Picture Has a Soul. Created by Nuthan S Belandur."
+servers:
+  - url: https://REPLACE_WITH_YOUR_DEPLOY_URL
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+paths:
+  /v1/identify:
+    post:
+      operationId: identifyPlace
+      summary: Identify and summarize a place from a photo
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image_file:
+                  type: string
+                  format: binary
+          application/json:
+            schema:
+              type: object
+              properties:
+                image_url:
+                  type: string
+      responses:
+        "200":
+          description: OK
+      security:
+        - ApiKeyAuth: []
+  /v1/health:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
